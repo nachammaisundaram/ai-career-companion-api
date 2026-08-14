@@ -14,6 +14,7 @@ mongo_client = MongoClient(MONGODB_URI)
 
 db = mongo_client["ai_career_companion"]
 conversations_collection = db["conversations"]
+profiles_collection = db["profiles"]
 
 try:
     mongo_client.admin.command("ping")
@@ -95,13 +96,75 @@ def profile(name: str = "Guest", age: int = 20):
     }
 @app.post("/career-profile")
 def career_profile(profile: UserProfile):
+
+    profiles_collection.update_one(
+        {"name": profile.name},
+        {"$set": profile.model_dump()},
+        upsert=True
+    )
+
     return {
-        "message": "Career profile received successfully",
+        "message": "Career profile saved successfully",
         "profile": profile
     }
 
-@app.post("/recommend-roles")
-def recommend_roles(profile: UserProfile):
+@app.get("/career-profile/{name}")
+def get_career_profile(name: str):
+
+    profile = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile:
+        return {
+            "message": "Career profile not found"
+        }
+
+    return {
+        "message": "Career profile retrieved successfully",
+        "profile": profile
+    }
+
+@app.get("/career-summary/{name}")
+def career_summary(name: str):
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found"
+        }
+
+    profile = UserProfile(**profile_data)
+
+    return {
+        "name": profile.name,
+        "target_role": profile.target_role,
+        "education": profile.education,
+        "skills": profile.skills,
+        "experience": profile.experience,
+        "interests": profile.interests
+    }
+
+
+@app.post("/recommend-roles/{name}")
+def recommend_roles(name: str):
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found"
+        }
+
+    profile = UserProfile(**profile_data)
 
     prompt = f"""
     Analyze this user's career profile and recommend 3 to 5 suitable corporate job roles.
@@ -126,23 +189,27 @@ def recommend_roles(profile: UserProfile):
         model="gemini-3.5-flash",
         input=prompt,
         generation_config={
-            "max_output_tokens": 1500
+            "max_output_tokens": 2500
         },
         response_format={
-        "type": "text",
-        "mime_type": "application/json",
-        "schema": CareerRecommendations.model_json_schema()
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": CareerRecommendations.model_json_schema()
         }
     )
 
     return CareerRecommendations.model_validate_json(response.output_text)
-
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
 
     if request.name not in conversation_history:
       conversation_history[request.name] = []
+
+    profile_data = profiles_collection.find_one(
+      {"name": request.name},
+      {"_id": 0}
+    )
 
     saved_conversations = conversations_collection.find(
       {"name": request.name}
@@ -154,7 +221,14 @@ def ask_ai(request: AIRequest):
 
     response = gemini_client.interactions.create(
         model="gemini-3.5-flash",
-        input=str(mongo_history) + "\nUser: " + request.question,
+        input=(
+            "Career Profile:\n"
+            + str(profile_data)
+            + "\n\nPrevious Conversations:\n"
+            + str(mongo_history)
+            + "\n\nUser: "
+            + request.question
+        ),
         generation_config={
            "max_output_tokens": 1000
         },
