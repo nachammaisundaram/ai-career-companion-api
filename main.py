@@ -50,8 +50,6 @@ class CareerRecommendations(BaseModel):
 
 app = FastAPI()
 
-conversation_history = {}
-
 @app.get("/")
 def home():
     return{"message":"welcome to AI Career Companion API!"}
@@ -150,21 +148,7 @@ def career_summary(name: str):
         "interests": profile.interests
     }
 
-
-@app.post("/recommend-roles/{name}")
-def recommend_roles(name: str):
-
-    profile_data = profiles_collection.find_one(
-        {"name": name},
-        {"_id": 0}
-    )
-
-    if not profile_data:
-        return {
-            "message": "Career profile not found"
-        }
-
-    profile = UserProfile(**profile_data)
+def generate_recommendations(profile: UserProfile):
 
     prompt = f"""
     Analyze this user's career profile and recommend 3 to 5 suitable corporate job roles.
@@ -198,13 +182,31 @@ def recommend_roles(name: str):
         }
     )
 
-    return CareerRecommendations.model_validate_json(response.output_text)
+    return CareerRecommendations.model_validate_json(
+        response.output_text
+    )
+
+@app.post("/recommend-roles/{name}")
+def recommend_roles(name: str):
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found"
+        }
+
+    profile = UserProfile(**profile_data)
+
+    return generate_recommendations(profile)
+
+  
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
-
-    if request.name not in conversation_history:
-      conversation_history[request.name] = []
 
     profile_data = profiles_collection.find_one(
       {"name": request.name},
@@ -249,19 +251,12 @@ def ask_ai(request: AIRequest):
 
     answer = response.output_text
 
-    conversation_history[request.name].append({
-      "user": request.question,
-      "ai": response.output_text
-    })
-
     conversations_collection.insert_one({
        "name": request.name,
        "question": request.question,
        "answer": response.output_text
     })
 
-
-    conversation_history[request.name] = conversation_history[request.name][-10:]
 
     return {
         "question": request.question,
