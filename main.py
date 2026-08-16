@@ -24,12 +24,18 @@ except Exception as e:
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 client = OpenAI(api_key=OPENAI_API_KEY)
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+gemini_client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
 
 class AIRequest(BaseModel):
     name: str
     question: str
+
 
 class UserProfile(BaseModel):
     name: str
@@ -38,6 +44,7 @@ class UserProfile(BaseModel):
     experience: str
     interests: str
     target_role: str | None = None
+
 
 class CareerRole(BaseModel):
     role: str
@@ -48,37 +55,54 @@ class CareerRole(BaseModel):
 class CareerRecommendations(BaseModel):
     roles: list[CareerRole]
 
+
+class AIResponse(BaseModel):
+    answer: str
+    key_points: list[str]
+    next_steps: list[str]
+
+
 app = FastAPI()
+
 
 @app.get("/")
 def home():
-    return{"message":"welcome to AI Career Companion API!"}
+    return {
+        "message": "welcome to AI Career Companion API!"
+    }
+
 
 @app.get("/about")
 def about():
-    return{
+    return {
         "project": "AI Career Companion API",
         "developer": "Nachammai",
         "version": "1.0"
     }
 
+
 @app.get("/hello")
 def hello():
-    return{"message": "Hello Naz! Welcome to FastAPI."}
+    return {
+        "message": "Hello Naz! Welcome to FastAPI."
+    }
+
 
 @app.get("/student/{name}")
-def student(name:str):
-    return{
+def student(name: str):
+    return {
         "student_name": name,
         "message": f"welcome {name} !"
     }
 
+
 @app.get("/college/{college_name}")
-def college(college_name:str):
-    return{
-        "college_name":college_name,
+def college(college_name: str):
+    return {
+        "college_name": college_name,
         "message": f"Welcome to {college_name} !"
     }
+
 
 @app.get("/greet")
 def greet(name: str = "Guest"):
@@ -86,12 +110,15 @@ def greet(name: str = "Guest"):
         "message": f"Hello {name}, welcome to AI Career Companion!"
     }
 
+
 @app.get("/profile")
 def profile(name: str = "Guest", age: int = 20):
-    return{
-        "name":name,
-        "age":age
+    return {
+        "name": name,
+        "age": age
     }
+
+
 @app.post("/career-profile")
 def career_profile(profile: UserProfile):
 
@@ -106,23 +133,25 @@ def career_profile(profile: UserProfile):
         "profile": profile
     }
 
+
 @app.get("/career-profile/{name}")
 def get_career_profile(name: str):
 
-    profile = profiles_collection.find_one(
+    profile_data = profiles_collection.find_one(
         {"name": name},
         {"_id": 0}
     )
 
-    if not profile:
+    if not profile_data:
         return {
             "message": "Career profile not found"
         }
 
     return {
         "message": "Career profile retrieved successfully",
-        "profile": profile
+        "profile": profile_data
     }
+
 
 @app.get("/career-summary/{name}")
 def career_summary(name: str):
@@ -147,6 +176,7 @@ def career_summary(name: str):
         "experience": profile.experience,
         "interests": profile.interests
     }
+
 
 def generate_recommendations(profile: UserProfile):
 
@@ -186,6 +216,7 @@ def generate_recommendations(profile: UserProfile):
         response.output_text
     )
 
+
 @app.post("/recommend-roles/{name}")
 def recommend_roles(name: str):
 
@@ -203,23 +234,21 @@ def recommend_roles(name: str):
 
     return generate_recommendations(profile)
 
-  
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
 
     profile_data = profiles_collection.find_one(
-      {"name": request.name},
-      {"_id": 0}
+        {"name": request.name},
+        {"_id": 0}
     )
 
     saved_conversations = conversations_collection.find(
-      {"name": request.name}
+        {"name": request.name}
     ).sort("_id", -1).limit(10)
 
     mongo_history = list(saved_conversations)
     mongo_history.reverse()
-
 
     response = gemini_client.interactions.create(
         model="gemini-3.5-flash",
@@ -232,34 +261,41 @@ def ask_ai(request: AIRequest):
             + request.question
         ),
         generation_config={
-           "max_output_tokens": 1000
+            "max_output_tokens": 2000
+        },
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": AIResponse.model_json_schema()
         },
         system_instruction="""
         You are AI Career Companion, a personal AI career assistant.
 
         Give clear, practical and personalized answers.
-        Avoid unnecessary information, repetition and filler.
-        Use bullet points or numbered lists when they improve clarity.
-        Explain important points properly instead of giving incomplete answers.
-        Give practical career guidance and suggestions when relevant.
-        Keep simple questions short and explain complex questions sufficiently.
-        Keep the entire response under 350 words.
-        Do not include a career profile summary or a long introduction.
-        Start directly with the recommended roles.
+
+        Return the response in this exact structure:
+        - answer: A clear answer to the user's question.
+        - key_points: Important points related to the answer.
+        - next_steps: Practical actions the user can take next.
+
+        Keep the response concise and useful.
+        Do not include unnecessary information.
         """
     )
 
-    answer = response.output_text
+    ai_response = AIResponse.model_validate_json(
+        response.output_text
+    )
 
     conversations_collection.insert_one({
-       "name": request.name,
-       "question": request.question,
-       "answer": response.output_text
+        "name": request.name,
+        "question": request.question,
+        "answer": ai_response.answer
     })
-
 
     return {
         "question": request.question,
-        "answer": answer
+        "answer": ai_response.answer,
+        "key_points": ai_response.key_points,
+        "next_steps": ai_response.next_steps
     }
-    
