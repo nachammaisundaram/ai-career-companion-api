@@ -243,6 +243,11 @@ def ask_ai(request: AIRequest):
         {"_id": 0}
     )
 
+    if not profile_data:
+      return {
+         "message": "Career profile not found. Please create your career profile first."
+        }
+
     saved_conversations = conversations_collection.find(
         {"name": request.name}
     ).sort("_id", -1).limit(10)
