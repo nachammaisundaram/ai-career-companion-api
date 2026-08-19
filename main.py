@@ -55,6 +55,18 @@ class CareerRole(BaseModel):
 class CareerRecommendations(BaseModel):
     roles: list[CareerRole]
 
+class SkillGap(BaseModel):
+    skill: str
+    current_level: str
+    importance: str
+    reason: str
+
+
+class SkillGapAnalysis(BaseModel):
+    target_role: str
+    skill_gaps: list[SkillGap]
+    priority_skills: list[str]
+    learning_plan: list[str]
 
 class AIResponse(BaseModel):
     answer: str
@@ -216,6 +228,52 @@ def generate_recommendations(profile: UserProfile):
         response.output_text
     )
 
+def analyze_skill_gap(profile: UserProfile):
+
+    prompt = f"""
+    Analyze this user's career profile and identify the most important skill gaps
+    for their target role.
+
+    Use ONLY the information provided below.
+    Do not invent skills, experience, certifications, or achievements.
+
+    Education: {profile.education}
+    Skills: {profile.skills}
+    Experience: {profile.experience}
+    Interests: {profile.interests}
+    Target Role: {profile.target_role}
+
+    Identify practical skills the user should strengthen for their target role.
+
+    For each skill gap:
+    - Give the skill name
+    - Estimate the user's current level
+    - Give its importance
+    - Briefly explain why the skill matters
+
+    Also provide:
+    - The highest-priority skills
+    - A practical learning plan
+
+    Keep everything concise and suitable for a fresher.
+    """
+
+    response = gemini_client.interactions.create(
+        model="gemini-3.5-flash",
+        input=prompt,
+        generation_config={
+            "max_output_tokens": 2500
+        },
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": SkillGapAnalysis.model_json_schema()
+        }
+    )
+
+    return SkillGapAnalysis.model_validate_json(
+        response.output_text
+    )
 
 @app.post("/recommend-roles/{name}")
 def recommend_roles(name: str):
@@ -234,6 +292,22 @@ def recommend_roles(name: str):
 
     return generate_recommendations(profile)
 
+@app.post("/skill-gap/{name}")
+def skill_gap(name: str):
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found. Please create your career profile first."
+        }
+
+    profile = UserProfile(**profile_data)
+
+    return analyze_skill_gap(profile)
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
