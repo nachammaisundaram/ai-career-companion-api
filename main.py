@@ -1,10 +1,11 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from openai import OpenAI
 from google import genai
 from pymongo import MongoClient
+from PyPDF2 import PdfReader
 
 load_dotenv()
 
@@ -79,6 +80,13 @@ class CareerRoadmap(BaseModel):
     target_role: str
     roadmap_duration: str
     steps: list[RoadmapStep]
+
+class ResumeAnalysis(BaseModel):
+    summary: str
+    skills: list[str]
+    strengths: list[str]
+    missing_skills: list[str]
+    suggestions: list[str]
 
 class AIResponse(BaseModel):
     answer: str
@@ -333,6 +341,47 @@ def generate_career_roadmap(profile: UserProfile):
         response.output_text
     )
 
+def analyze_resume(resume_text: str, target_role: str | None = None):
+
+    prompt = f"""
+    Analyze the following resume for a fresher.
+
+    Target Role:
+    {target_role}
+
+    Resume Text:
+    {resume_text}
+
+    Use ONLY the information present in the resume.
+    Do not invent qualifications, skills, experience, or achievements.
+
+    Provide:
+    - A brief resume summary
+    - Skills explicitly found in the resume
+    - The candidate's strengths based on the resume
+    - Skills or areas that appear to be missing or need strengthening for the target role
+    - Practical suggestions for improvement
+
+    Keep the analysis concise and useful for a fresher.
+    """
+
+    response = gemini_client.interactions.create(
+        model="gemini-3.5-flash",
+        input=prompt,
+        generation_config={
+            "max_output_tokens": 2500
+        },
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": ResumeAnalysis.model_json_schema()
+        }
+    )
+
+    return ResumeAnalysis.model_validate_json(
+        response.output_text
+    )
+
 @app.post("/recommend-roles/{name}")
 def recommend_roles(name: str):
 
@@ -383,6 +432,57 @@ def career_roadmap(name: str):
     profile = UserProfile(**profile_data)
 
     return generate_career_roadmap(profile)
+
+@app.post("/upload-resume/{name}")
+async def upload_resume(name: str, file: UploadFile = File(...)):
+
+    if not file.filename.lower().endswith(".pdf"):
+        return {
+            "message": "Only PDF resumes are supported."
+        }
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found. Please create your career profile first."
+        }
+
+    profile = UserProfile(**profile_data)
+
+    contents = await file.read()
+
+    with open("temp_resume.pdf", "wb") as resume_file:
+        resume_file.write(contents)
+
+    reader = PdfReader("temp_resume.pdf")
+
+    resume_text = ""
+
+    for page in reader.pages:
+        text = page.extract_text()
+
+        if text:
+            resume_text += text + "\n"
+
+    if not resume_text.strip():
+        return {
+            "message": "Could not extract text from the uploaded PDF."
+        }
+
+    analysis = analyze_resume(
+        resume_text,
+        profile.target_role
+    )
+
+    return {
+        "filename": file.filename,
+        "target_role": profile.target_role,
+        "analysis": analysis
+    }
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
