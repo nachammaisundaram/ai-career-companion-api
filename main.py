@@ -68,6 +68,18 @@ class SkillGapAnalysis(BaseModel):
     priority_skills: list[str]
     learning_plan: list[str]
 
+class RoadmapStep(BaseModel):
+    phase: str
+    focus: str
+    skills: list[str]
+    projects: list[str]
+    outcome: str
+
+class CareerRoadmap(BaseModel):
+    target_role: str
+    roadmap_duration: str
+    steps: list[RoadmapStep]
+
 class AIResponse(BaseModel):
     answer: str
     key_points: list[str]
@@ -275,6 +287,52 @@ def analyze_skill_gap(profile: UserProfile):
         response.output_text
     )
 
+def generate_career_roadmap(profile: UserProfile):
+
+    prompt = f"""
+    Create a practical career roadmap for this user.
+
+    Use ONLY the information provided below.
+    Do not invent qualifications, experience, or achievements.
+
+    Education: {profile.education}
+    Skills: {profile.skills}
+    Experience: {profile.experience}
+    Interests: {profile.interests}
+    Target Role: {profile.target_role}
+
+    Create a realistic roadmap for a fresher targeting the user's target role.
+
+    Divide the roadmap into clear learning phases.
+
+    For each phase provide:
+    - Phase name
+    - Main focus
+    - Skills to learn or strengthen
+    - Practical projects to build
+    - Expected outcome
+
+    Keep the roadmap practical and concise.
+    Focus on skills and projects that can improve employability.
+    """
+
+    response = gemini_client.interactions.create(
+        model="gemini-3.5-flash",
+        input=prompt,
+        generation_config={
+            "max_output_tokens": 3000
+        },
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": CareerRoadmap.model_json_schema()
+        }
+    )
+
+    return CareerRoadmap.model_validate_json(
+        response.output_text
+    )
+
 @app.post("/recommend-roles/{name}")
 def recommend_roles(name: str):
 
@@ -308,6 +366,23 @@ def skill_gap(name: str):
     profile = UserProfile(**profile_data)
 
     return analyze_skill_gap(profile)
+
+@app.post("/career-roadmap/{name}")
+def career_roadmap(name: str):
+
+    profile_data = profiles_collection.find_one(
+        {"name": name},
+        {"_id": 0}
+    )
+
+    if not profile_data:
+        return {
+            "message": "Career profile not found. Please create your career profile first."
+        }
+
+    profile = UserProfile(**profile_data)
+
+    return generate_career_roadmap(profile)
 
 @app.post("/ask-ai")
 def ask_ai(request: AIRequest):
