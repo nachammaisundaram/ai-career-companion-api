@@ -7,6 +7,8 @@ function App() {
   const [message, setMessage] = useState("");
   const [profile, setProfile] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
+  const [question, setQuestion] = useState("");
+  const [aiResponse, setAiResponse] = useState(null);
 
   const getRecommendations = async () => {
     try {
@@ -14,6 +16,18 @@ function App() {
       setRecommendations(response.data.roles);
     } catch (error) {
       console.log("Recommendation error:", error);
+    }
+  };
+
+  const askAI = async () => {
+    try {
+      const response = await API.post("/ask-ai", {
+      name: name,
+      question: question,
+      });
+      setAiResponse(response.data);
+    } catch (error) {
+      console.log("AI error:", error);
     }
   };
 
@@ -108,6 +122,40 @@ function App() {
                 </div>
               ))}
             </div>
+          )}
+
+          <div className="ai-chat">
+            <h2>AI Career Assistant</h2>
+
+            <input
+             type="text"
+             placeholder="Ask a career question..."
+             value={question}
+             onChange={(e) => setQuestion(e.target.value)}
+            />
+
+            <button onClick={askAI}>
+             Ask AI
+            </button>
+          </div>
+
+          {aiResponse && (
+            <div className="ai-response">
+              <h3>AI Response</h3>
+              <p>{aiResponse.answer}</p>
+              <h4>Key Points</h4>
+              <ul>
+                {aiResponse.key_points.map((point, index) => (
+                  <li key={index}>{point}</li>
+                ))}
+              </ul>
+              <h4>Next Steps</h4>
+              <ul>
+                {aiResponse.next_steps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+             </ul>
+           </div>
           )}
         
         </div>
