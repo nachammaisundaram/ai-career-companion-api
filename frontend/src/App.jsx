@@ -5,6 +5,17 @@ import "./App.css";
 function App() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
+
+  const getRecommendations = async () => {
+    try {
+      const response = await API.post(`/recommend-roles/${name}`);
+      setRecommendations(response.data.roles);
+    } catch (error) {
+      console.log("Recommendation error:", error);
+    }
+  };
 
   return (
     <div className="app">
@@ -33,6 +44,7 @@ function App() {
            onClick={async () => {
              try {
                const response = await API.get(`/career-profile/${name}`);
+               setProfile(response.data.profile);
                setMessage(response.data.message);
               } catch (error) {
                 console.log("Backend error:", error);
@@ -47,6 +59,57 @@ function App() {
             Continue
           </button>
           {message && <p className="message">{message}</p>}
+
+          {profile && (
+            <div className="profile-card">
+              <h2>Career Dashboard</h2>
+              <p><strong>Name:</strong> {profile.name}</p>
+              <p>
+                <strong>Target Role:</strong>{" "}
+                {profile.target_role || "Not specified"}
+                </p>
+                <p>
+                  <strong>Education:</strong>{" "}
+                  {profile.education}
+                  </p>
+                <p>
+                  <strong>Skills:</strong>{" "}
+                  {profile.skills}
+                </p>
+                <p>
+                  <strong>Experience:</strong>{" "}
+                  {profile.experience}
+                </p>
+                <p>
+                  <strong>Interests:</strong>{" "}
+                  {profile.interests}
+                  </p>
+            </div>
+          )}
+          <button onClick={getRecommendations}>
+            Get Career Recommendations
+          </button>
+
+          {recommendations && (
+            <div className="recommendations">
+              <h2>Recommended Career Roles</h2>
+
+              {recommendations.map((item, index) => (
+                <div className="role-card" key={index}>
+                  <h3>{item.role}</h3>
+                  <p>{item.why}</p>
+                  <strong>Skills to strengthen:</strong>
+
+                  <ul>
+                    {item.skills_to_strengthen.map((skill, skillIndex) => (
+                      <li key={skillIndex}>{skill}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        
         </div>
       </div>
     </div>
@@ -54,3 +117,4 @@ function App() {
 }
 
 export default App;
+
