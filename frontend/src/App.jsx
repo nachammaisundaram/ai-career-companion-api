@@ -4,47 +4,97 @@ import "./App.css";
 
 function App() {
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
   const [profile, setProfile] = useState(null);
-  const [recommendations, setRecommendations] = useState(null);
   const [question, setQuestion] = useState("");
-  const [aiResponse, setAiResponse] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const getRecommendations = async () => {
+  const login = async () => {
+    if (!name.trim()) {
+      setMessage("Please enter your name.");
+      return;
+    }
+
     try {
-      const response = await API.post(`/recommend-roles/${name}`);
-      setRecommendations(response.data.roles);
+      const response = await API.get(`/career-profile/${name}`);
+
+      setProfile(response.data.profile);
+      setMessage("");
+
     } catch (error) {
-      console.log("Recommendation error:", error);
+      console.log("Login error:", error);
+
+      setMessage(
+        error.response
+          ? `Backend error: ${error.response.status}`
+          : "Unable to connect to the backend."
+      );
     }
   };
 
   const askAI = async () => {
+    if (!question.trim() || loading) {
+      return;
+    }
+
+    const userMessage = question.trim();
+
+    setMessages((previous) => [
+      ...previous,
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ]);
+
+    setQuestion("");
+    setLoading(true);
+
     try {
       const response = await API.post("/ask-ai", {
-      name: name,
-      question: question,
+        name: name,
+        question: userMessage,
       });
-      setAiResponse(response.data);
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "ai",
+          content: response.data.answer,
+        },
+      ]);
+
     } catch (error) {
       console.log("AI error:", error);
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "ai",
+          content: "Sorry, I couldn't connect to the AI right now.",
+        },
+      ]);
+
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="app">
-      <div className="container">
-        <h1>AI Career Companion</h1>
+  if (!profile) {
+    return (
+      <div className="login-page">
 
-        <p className="subtitle">
-          Your personal AI-powered career assistant
-        </p>
+        <div className="login-card">
 
-        <div className="card">
-          <h2>Welcome 👋</h2>
+          <div className="logo">
+            ✦
+          </div>
+
+          <h1>AI Career Companion</h1>
 
           <p>
-            Enter your name to access your personalized career dashboard.
+            Your personal AI-powered career assistant.
           </p>
 
           <input
@@ -52,117 +102,132 @@ function App() {
             placeholder="Enter your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-          />
-
-         <button
-           onClick={async () => {
-             try {
-               const response = await API.get(`/career-profile/${name}`);
-               setProfile(response.data.profile);
-               setMessage(response.data.message);
-              } catch (error) {
-                console.log("Backend error:", error);
-                setMessage(
-                  error.response
-                  ? `Backend error: ${error.response.status}`
-                  : "Unable to connect to the backend."
-                );
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                login();
               }
             }}
-          >
+          />
+
+          <button onClick={login}>
             Continue
           </button>
-          {message && <p className="message">{message}</p>}
 
-          {profile && (
-            <div className="profile-card">
-              <h2>Career Dashboard</h2>
-              <p><strong>Name:</strong> {profile.name}</p>
-              <p>
-                <strong>Target Role:</strong>{" "}
-                {profile.target_role || "Not specified"}
-                </p>
-                <p>
-                  <strong>Education:</strong>{" "}
-                  {profile.education}
-                  </p>
-                <p>
-                  <strong>Skills:</strong>{" "}
-                  {profile.skills}
-                </p>
-                <p>
-                  <strong>Experience:</strong>{" "}
-                  {profile.experience}
-                </p>
-                <p>
-                  <strong>Interests:</strong>{" "}
-                  {profile.interests}
-                  </p>
-            </div>
-          )}
-          <button onClick={getRecommendations}>
-            Get Career Recommendations
-          </button>
-
-          {recommendations && (
-            <div className="recommendations">
-              <h2>Recommended Career Roles</h2>
-
-              {recommendations.map((item, index) => (
-                <div className="role-card" key={index}>
-                  <h3>{item.role}</h3>
-                  <p>{item.why}</p>
-                  <strong>Skills to strengthen:</strong>
-
-                  <ul>
-                    {item.skills_to_strengthen.map((skill, skillIndex) => (
-                      <li key={skillIndex}>{skill}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+          {message && (
+            <div className="error-message">
+              {message}
             </div>
           )}
 
-          <div className="ai-chat">
-            <h2>AI Career Assistant</h2>
+        </div>
 
-            <input
-             type="text"
-             placeholder="Ask a career question..."
-             value={question}
-             onChange={(e) => setQuestion(e.target.value)}
-            />
+      </div>
+    );
+  }
 
-            <button onClick={askAI}>
-             Ask AI
-            </button>
+  return (
+    <div className="chat-page">
+
+      <header className="chat-header">
+
+        <div className="brand">
+          <div className="brand-icon">
+            ✦
           </div>
 
-          {aiResponse && (
-            <div className="ai-response">
-              <h3>AI Response</h3>
-              <p>{aiResponse.answer}</p>
-              <h4>Key Points</h4>
-              <ul>
-                {aiResponse.key_points.map((point, index) => (
-                  <li key={index}>{point}</li>
-                ))}
-              </ul>
-              <h4>Next Steps</h4>
-              <ul>
-                {aiResponse.next_steps.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-             </ul>
-           </div>
-          )}
-        
+          <div>
+            <h2>AI Career Companion</h2>
+            <span>Career Assistant</span>
+          </div>
         </div>
+
+        <div className="user-name">
+          {profile.name}
+        </div>
+
+      </header>
+
+
+      <main className="chat-area">
+
+        {messages.length === 0 && (
+          <div className="welcome">
+
+            <div className="welcome-icon">
+              ✦
+            </div>
+
+            <h1>
+              Hey {profile.name} 👋
+            </h1>
+
+            <p>
+              I'm your AI Career Companion.
+              <br />
+              Ask me anything about your career.
+            </p>
+
+          </div>
+        )}
+
+
+        <div className="messages">
+
+          {messages.map((item, index) => (
+            <div
+              key={index}
+              className={`message-row ${item.role}`}
+            >
+
+              <div className="message-bubble">
+                {item.content}
+              </div>
+
+            </div>
+          ))}
+
+
+          {loading && (
+            <div className="message-row ai">
+
+              <div className="message-bubble typing">
+                AI is thinking...
+              </div>
+
+            </div>
+          )}
+
+        </div>
+
+      </main>
+
+
+      <div className="chat-input-area">
+
+        <div className="chat-input">
+
+          <input
+            type="text"
+            placeholder="Ask anything about your career..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                askAI();
+              }
+            }}
+          />
+
+          <button onClick={askAI}>
+            ➤
+          </button>
+
+        </div>
+
       </div>
+
     </div>
   );
 }
 
 export default App;
-
