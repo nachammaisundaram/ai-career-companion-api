@@ -1,13 +1,81 @@
+:root {
+
+  /* Main heading */
+  --font-title: 38px;
+
+  /* Welcome heading */
+  --font-welcome: 34px;
+
+  /* Normal body text */
+  --font-body: 19px;
+
+  /* AI + User chat messages */
+  --font-chat: 17px;
+
+  /* Header title */
+  --font-header: 20px;
+
+  /* Header small text */
+  --font-header-small: 18px;
+
+  /* Input text */
+  --font-input: 19px;
+
+  /* Button text */
+  --font-button: 19px;
+
+  /* Small/error text */
+  --font-small: 14px;
+
+
+  /* =====================================
+     GREEN THEME
+  ===================================== */
+
+  --green-main: #9caf7b;
+  --green-light: #aabd8b;
+  --green-soft: #8fa874;
+
+  --green-dark-text: #10150d;
+
+
+  /* =====================================
+     DARK THEME
+  ===================================== */
+
+  --background: #050705;
+  --background-soft: #0a0f0a;
+  --card: #0d130e;
+  --chat-ai: #111711;
+  --border: #293229;
+
+  --text-main: #f1f5ed;
+  --text-secondary: #b8c0b3;
+  --text-muted: #899384;
+}
+
+
+/* =========================================
+   GLOBAL
+========================================= */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #050705;
-  color: #f1f5ed;
+  background: var(--background);
+  color: var(--text-main);
 }
 
 button,
@@ -16,334 +84,756 @@ input {
 }
 
 
-/* LOGIN */
+/* =========================================
+   LOGIN PAGE
+========================================= */
 
 .login-page {
   min-height: 100vh;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  padding: 25px;
+
   background:
     radial-gradient(
       circle at top,
-      rgba(104, 140, 91, 0.15),
+      rgba(156, 175, 123, 0.16),
       transparent 45%
     ),
-    #050705;
-  padding: 20px;
+    var(--background);
 }
+
+
+/* Login card */
 
 .login-card {
   width: 100%;
-  max-width: 430px;
+  max-width: 470px;
+
+  padding: 55px 45px;
+
   text-align: center;
-  padding: 50px 40px;
-  border: 1px solid rgba(150, 180, 130, 0.18);
-  border-radius: 28px;
-  background: rgba(15, 20, 15, 0.92);
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+
+  border: 1px solid rgba(156, 175, 123, 0.25);
+
+  border-radius: 30px;
+
+  background: rgba(13, 19, 14, 0.96);
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.55);
 }
 
+
+/* Logo */
+
 .logo {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 25px;
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 28px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18px;
-  background: #829b68;
-  color: #071006;
-  font-size: 30px;
+
+  border-radius: 20px;
+
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  font-size: 34px;
 }
+
+
+/* Login title */
 
 .login-card h1 {
-  font-size: 32px;
-  margin-bottom: 12px;
-}
+  color: var(--text-main);
 
-.login-card p {
-  color: #aab3a5;
-  line-height: 1.6;
-  margin-bottom: 30px;
-}
+  font-size: var(--font-title);
 
-.login-card input {
-  width: 100%;
-  padding: 16px 18px;
-  border-radius: 14px;
-  border: 1px solid #293129;
-  background: #0a0e0a;
-  color: white;
-  outline: none;
-  font-size: 15px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
   margin-bottom: 15px;
 }
 
-.login-card input:focus {
-  border-color: #829b68;
+
+/* Login subtitle */
+
+.login-card p {
+  color: var(--text-secondary);
+
+  font-size: var(--font-body);
+
+  line-height: 1.7;
+
+  margin-bottom: 32px;
 }
+
+
+/* Login input */
+
+.login-card input {
+  width: 100%;
+
+  padding: 18px 20px;
+
+  margin-bottom: 16px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 15px;
+
+  background: #080c08;
+
+  color: var(--text-main);
+
+  outline: none;
+
+  font-size: var(--font-input);
+}
+
+.login-card input::placeholder {
+  color: #8f9989;
+}
+
+.login-card input:focus {
+  border-color: var(--green-main);
+}
+
+
+/* Continue button */
 
 .login-card button {
   width: 100%;
-  padding: 16px;
+
+  padding: 17px;
+
   border: none;
-  border-radius: 14px;
-  background: #829b68;
-  color: #071006;
-  font-size: 15px;
+
+  border-radius: 15px;
+
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  font-size: var(--font-button);
+
   font-weight: 700;
+
   cursor: pointer;
 }
 
 .login-card button:hover {
-  opacity: 0.9;
+  background: var(--green-light);
 }
+
+
+/* Login error */
 
 .error-message {
-  margin-top: 15px;
-  color: #d99393;
-  font-size: 14px;
+  margin-top: 17px;
+
+  color: #e2a0a0;
+
+  font-size: var(--font-small);
 }
 
 
-/* CHAT */
+/* =========================================
+   CHAT PAGE
+========================================= */
 
 .chat-page {
   min-height: 100vh;
+
   display: flex;
   flex-direction: column;
+
   background:
     radial-gradient(
       circle at top,
-      rgba(104, 140, 91, 0.08),
-      transparent 35%
+      rgba(156, 175, 123, 0.08),
+      transparent 40%
     ),
-    #050705;
+    var(--background);
 }
 
 
-/* HEADER */
+/* =========================================
+   HEADER
+========================================= */
 
 .chat-header {
-  height: 76px;
-  padding: 0 30px;
+  min-height: 82px;
+
+  padding: 0 35px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #1b211b;
-  background: rgba(5, 7, 5, 0.9);
+
+  border-bottom: 1px solid #1c241c;
+
+  background: rgba(5, 7, 5, 0.94);
 }
+
+
+/* Brand */
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+
+  gap: 14px;
 }
 
+
+/* Brand icon */
+
 .brand-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #829b68;
-  color: #071006;
+  width: 44px;
+  height: 44px;
+
+  border-radius: 13px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  font-size: 22px;
 }
 
+
+/* Brand title */
+
 .brand h2 {
-  font-size: 16px;
+  color: var(--text-main);
+
+  font-size: var(--font-header);
+
+  font-weight: 600;
 }
+
+
+/* Career Assistant */
 
 .brand span {
   display: block;
-  margin-top: 3px;
-  color: #7f897c;
-  font-size: 12px;
+
+  margin-top: 5px;
+
+  color: var(--text-secondary);
+
+  font-size: var(--font-header-small);
 }
+
+
+/* Username */
 
 .user-name {
-  color: #aeba9f;
-  font-size: 14px;
+  color: var(--green-light);
+
+  font-size: var(--font-header);
+
+  font-weight: 600;
 }
 
 
-/* CHAT AREA */
+/* =========================================
+   CHAT AREA
+========================================= */
 
 .chat-area {
   flex: 1;
+
   width: 100%;
-  max-width: 900px;
+
+  max-width: 950px;
+
   margin: auto;
-  padding: 50px 25px 140px;
+
+  padding: 55px 30px 170px;
 }
+
+
+/* =========================================
+   WELCOME
+========================================= */
 
 .welcome {
   text-align: center;
-  margin-top: 100px;
+
+  margin-top: 90px;
 }
 
+
+/* Welcome icon */
+
 .welcome-icon {
-  width: 65px;
-  height: 65px;
-  margin: 0 auto 25px;
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 28px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 20px;
-  background: #829b68;
-  color: #071006;
-  font-size: 30px;
+
+  border-radius: 21px;
+
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  font-size: 34px;
 }
+
+
+/* Hey Naz */
 
 .welcome h1 {
-  font-size: 34px;
-  margin-bottom: 12px;
+  color: var(--text-main);
+
+  font-size: var(--font-welcome);
+
+  font-weight: 600;
+
+  line-height: 1.3;
+
+  margin-bottom: 15px;
 }
+
+
+/* Welcome description */
 
 .welcome p {
-  color: #8e988b;
-  line-height: 1.7;
+  color: var(--text-secondary);
+
+  font-size: var(--font-body);
+
+  line-height: 1.8;
 }
 
 
-/* MESSAGES */
+/* =========================================
+   MESSAGES
+========================================= */
 
 .messages {
   display: flex;
+
   flex-direction: column;
-  gap: 18px;
+
+  gap: 22px;
 }
+
+
+/* Message row */
 
 .message-row {
   display: flex;
+
   width: 100%;
 }
+
+
+/* User on RIGHT */
 
 .message-row.user {
   justify-content: flex-end;
 }
 
+
+/* AI on LEFT */
+
 .message-row.ai {
   justify-content: flex-start;
 }
 
+
+/* Message bubble */
+
 .message-bubble {
-  max-width: 72%;
-  padding: 14px 18px;
-  border-radius: 18px;
-  line-height: 1.6;
-  font-size: 15px;
+  max-width: 75%;
+
+  padding: 17px 21px;
+
+  border-radius: 19px;
+
+  font-size: var(--font-chat);
+
+  line-height: 1.75;
+
   white-space: pre-wrap;
+
+  overflow-wrap: break-word;
 }
+
+
+/* =========================================
+   USER MESSAGE
+========================================= */
 
 .message-row.user .message-bubble {
-  background: #829b68;
-  color: #071006;
-  border-bottom-right-radius: 5px;
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  border-bottom-right-radius: 6px;
+
+  text-align: left;
 }
+
+
+/* =========================================
+   AI MESSAGE
+========================================= */
 
 .message-row.ai .message-bubble {
-  background: #111611;
-  border: 1px solid #242c23;
-  color: #dfe6dc;
-  border-bottom-left-radius: 5px;
+  background: var(--chat-ai);
+
+  border: 1px solid #293329;
+
+  color: var(--text-main);
+
+  border-bottom-left-radius: 6px;
+
+  /* Proper AI text alignment */
+
+  text-align: justify;
+
+  text-justify: inter-word;
 }
+
+
+/* Typing */
 
 .typing {
-  color: #91a286 !important;
+  color: var(--green-light) !important;
+
+  text-align: left !important;
 }
 
 
-/* INPUT */
+/* =========================================
+   CHAT INPUT
+========================================= */
 
 .chat-input-area {
   position: fixed;
+
   bottom: 0;
+
   left: 0;
+
   right: 0;
-  padding: 18px 20px 25px;
-  background: linear-gradient(
-    transparent,
-    #050705 35%
-  );
+
+  padding: 20px 25px 28px;
+
+  background:
+    linear-gradient(
+      transparent,
+      var(--background) 35%
+    );
 }
 
+
+/* Input container */
+
 .chat-input {
-  max-width: 850px;
+  width: 100%;
+
+  max-width: 900px;
+
+  min-height: 68px;
+
   margin: auto;
+
   display: flex;
+
   align-items: center;
-  padding: 7px;
-  border: 1px solid #293129;
-  border-radius: 20px;
-  background: #0c110c;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+
+  padding: 8px 9px 8px 18px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 22px;
+
+  background: #0b100b;
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5);
 }
+
+
+/* Input */
 
 .chat-input input {
   flex: 1;
-  padding: 14px;
+
+  min-width: 0;
+
+  padding: 15px 8px;
+
   border: none;
+
   outline: none;
+
   background: transparent;
-  color: #f1f5ed;
-  font-size: 15px;
+
+  color: var(--text-main);
+
+  font-size: var(--font-input);
 }
+
+
+/* Placeholder */
 
 .chat-input input::placeholder {
-  color: #687166;
+  color: #899384;
+
+  opacity: 1;
 }
 
+
+/* Send button */
+
 .chat-input button {
-  width: 45px;
-  height: 45px;
+  flex-shrink: 0;
+
+  width: 50px;
+  height: 50px;
+
   border: none;
-  border-radius: 14px;
-  background: #829b68;
-  color: #071006;
-  font-size: 19px;
+
+  border-radius: 15px;
+
+  background: var(--green-main);
+
+  color: var(--green-dark-text);
+
+  font-size: 21px;
+
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-input button:hover {
-  opacity: 0.9;
+  background: var(--green-light);
 }
 
 
-/* MOBILE */
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 600px) {
 
-  .chat-header {
-    padding: 0 18px;
+  .login-page {
+    padding: 18px;
   }
+
+
+  .login-card {
+    max-width: 100%;
+
+    padding: 45px 25px;
+
+    border-radius: 25px;
+  }
+
+
+  .login-card h1 {
+    font-size: 30px;
+  }
+
+
+  .login-card p {
+    font-size: 16px;
+  }
+
+
+  .login-card input {
+    font-size: 17px;
+
+    padding: 17px;
+  }
+
+
+  .login-card button {
+    font-size: 16px;
+
+    padding: 17px;
+  }
+
+
+  /* HEADER */
+
+  .chat-header {
+    min-height: 72px;
+
+    padding: 0 17px;
+  }
+
+
+  .brand {
+    gap: 10px;
+  }
+
+
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+
+    font-size: 19px;
+  }
+
+
+  .brand h2 {
+    font-size: 16px;
+  }
+
+
+  .brand span {
+    font-size: 13px;
+  }
+
 
   .user-name {
-    display: none;
+    font-size: 16px;
   }
+
+
+  /* CHAT */
 
   .chat-area {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 35px 15px 145px;
   }
+
 
   .welcome {
-    margin-top: 70px;
+    margin-top: 60px;
   }
 
+
+  .welcome-icon {
+    width: 62px;
+    height: 62px;
+
+    font-size: 29px;
+
+    margin-bottom: 23px;
+  }
+
+
   .welcome h1 {
+    font-size: 29px;
+
+    margin-bottom: 13px;
+  }
+
+
+  .welcome p {
+    font-size: 16px;
+
+    line-height: 1.7;
+  }
+
+
+  /* MESSAGE */
+
+  .messages {
+    gap: 17px;
+  }
+
+
+  .message-bubble {
+    max-width: 88%;
+
+    padding: 15px 17px;
+
+    font-size: 16px;
+
+    line-height: 1.7;
+  }
+
+
+  /* INPUT */
+
+  .chat-input-area {
+    padding: 14px 12px 20px;
+  }
+
+
+  .chat-input {
+    min-height: 64px;
+
+    padding: 7px 8px 7px 14px;
+
+    border-radius: 20px;
+  }
+
+
+  .chat-input input {
+    font-size: 16px;
+
+    padding: 14px 5px;
+  }
+
+
+  .chat-input button {
+    width: 47px;
+    height: 47px;
+
+    font-size: 19px;
+  }
+}
+
+
+/* =========================================
+   VERY SMALL MOBILE
+========================================= */
+
+@media (max-width: 380px) {
+
+  .login-card {
+    padding: 35px 20px;
+  }
+
+
+  .login-card h1 {
     font-size: 27px;
   }
 
+
+  .welcome h1 {
+    font-size: 26px;
+  }
+
+
   .message-bubble {
-    max-width: 85%;
+    max-width: 92%;
+
+    font-size: 15px;
   }
 
-  .login-card {
-    padding: 40px 25px;
-  }
 
+  .chat-input input {
+    font-size: 15px;
+  }
 }
